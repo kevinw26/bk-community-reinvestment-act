@@ -40,18 +40,18 @@ purposes of the regulation. This was set by [70 FR 44256](
     https://www.federalregister.gov/d/05-15227/p-3) (2005) at 1 billion $,
 adjusting for inflation (CPI). Prior to 2005, reporting was uneven: a "small
 bank" was an independent bank with less than 250 million $ in assets or
-otherwise affiliated with a holding company that had less than 1 billion $
-in assets. (Both thresholds applying only if they were met for the two
-preceding calendar years.) See [66 FR 37602](
-    https://www.federalregister.gov/d/01-18033/p-61), 37606 (2001). A final
-CRA rule in 2024, superseding the 1995 rules, kept the inflation-adjusted
-2005 threshold. See [89 FR 6574, 7212](
+otherwise affiliated with a holding company that had less than 1 billion $ in
+assets. (Both thresholds applying only if they were met for the two preceding
+calendar years.) See [66 FR 37602, 37606](
+    https://www.federalregister.gov/d/01-18033/p-61) (2001). A final CRA rule 
+in 2024, superseding the 1995 rules, kept the inflation-adjusted 2005 
+threshold. See [89 FR 6574, 7212](
     https://www.federalregister.gov/d/2023-25797/p-8507) (2024).
 
 ## Geography
 The main identifier in aggregates is the county FIPS code. FIPS codes can
-change over time as counties expand, contract, split, merge, and rename.
-They should be treated as valid only at the same CRA reporting year.
+change over time as counties expand, contract, split, merge, and rename. They
+should be treated as valid only at the same CRA reporting year.
 
 ## Authors and acknowledgements
 Bryce Bangerter and Kevin Wong
