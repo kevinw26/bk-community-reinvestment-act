@@ -14,7 +14,7 @@ from functools import lru_cache
 from glob import glob
 from io import StringIO
 from os import path
-from typing import Literal, TextIO, Tuple
+from typing import Literal, TextIO, Tuple, Union
 from tqdm.autonotebook import tqdm
 
 
@@ -22,7 +22,7 @@ class MissingSpec(Exception):
     pass
 
 
-def parse_tableid(record: str, return_record=False):
+def parse_tableid(record: Union[str, bytes], return_record: bool = False):
     if isinstance(record, bytes):  # decode bytes if necessary
         try:
             record = record.decode('utf-8')
@@ -59,7 +59,7 @@ def parse_tableid(record: str, return_record=False):
 
 
 @lru_cache(maxsize=100)
-def get_spec(f_type, table):
+def get_spec(f_type: str, table: str):
     p = path.join('specs', 'specs_{}.csv'.format(
         # omit the trailing underscore if there is no table; this should only
         # be the case in f_type == 'trans'
@@ -129,6 +129,7 @@ def parse_file(file_location: Tuple[str, str], year: int,
             from e
 
     # for each table id, parse
+    # kevin.wong (2023-04-26) StringIO is memory inefficient
     for k, v in tables.items():
         try:
             parse_table(StringIO('\n'.join(v)), year, f_type, k)
@@ -144,12 +145,13 @@ if __name__ == '__main__':
 
     zips = pd.Series(
         sorted(glob(path.join('downloads', '*.zip'))),
-        name='path').to_frame()
+        name='path'
+    ).to_frame()
     if len(zips) < 1:
         raise ValueError('there are no zip files in the downloads folder')
 
     zips[['y_stub', 'f_type']] = zips['path'] \
-        .apply(lambda p: path.basename(p)) \
+        .apply(path.basename) \
         .str.extract(r'^(\d{2})exp_(\w+)', expand=True)
 
     _y = zips['y_stub'].pipe(pd.to_numeric)
