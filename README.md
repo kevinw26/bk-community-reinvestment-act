@@ -1,4 +1,4 @@
-# bk-cra
+# Community Reinvestment Act
 
 This is a set of scripts to download (if CloudFlare allows it) and parse flat
 files from the FFIEC Community Reinvestment Act's public data disclosures. The
