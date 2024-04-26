@@ -2,8 +2,8 @@
 
 This is a set of scripts to download (if CloudFlare allows it) and parse flat
 files from the FFIEC Community Reinvestment Act's public data disclosures. The
-files match the pattern `cra\d_.+?\.py` should be executed in alphanumeric
-sort order.
+files match the pattern `src/cra\d_.+?\.py` and should be executed in
+alphanumeric sort order.
 
 This data is kept in fixed-width `.dat` files, making it annoying to work with.
 The files are hosted at `https://www.ffiec.gov/cra/craflatfiles.htm`. Because
