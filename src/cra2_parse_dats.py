@@ -34,7 +34,7 @@ def parse_tableid(record: str, return_record=False):
     if m:
         table_id = (
             m.group(0).strip().replace('-', '')
-            if m.group(3) != '0' else
+            if m.group(3).strip() != '0' else
             m.group(1) + m.group(2)
         ).lower()
         return (table_id, record) if return_record else table_id
