@@ -19,12 +19,12 @@ As with other data products such as pre-2017 HMDA (Home Mortgage Disclosure
 Act), the respondents are identified by `AGENCY_CODE` and `RESPONDENT_ID`. The
 agency codes are as follows.
 
-| `AGENCY_CODE`    | Agency               |
-| ---------------: | -------------------- |
-| 1                | OCC                  |
-| 2                | Federal Reserve      |
-| 3                | FDIC                 |
-| 4                | OTS (abolished 2011) |
+| `AGENCY_CODE`    | Agency                                        |
+| ---------------: | --------------------------------------------- |
+| 1                | Office of the Comptroller of the Currency     |
+| 2                | Federal Reserve                               |
+| 3                | Federal Deposit Insurance Corporation         |
+| 4                | Office of Thrift Supervision (abolished 2011) |
 
 Mapping from CRA respondents to standard bank identifiers such as FDIC `CERT`
 and Fed `RSSD` is via the transmittal table.
