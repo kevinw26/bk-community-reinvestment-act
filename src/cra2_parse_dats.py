@@ -14,8 +14,8 @@ from functools import lru_cache
 from glob import glob
 from io import StringIO
 from os import path
-from typing import Literal, TextIO, Tuple, Union
-from tqdm.autonotebook import tqdm
+from tqdm import tqdm
+from typing import Literal, TextIO, Tuple
 
 
 class MissingSpec(Exception):
@@ -80,6 +80,14 @@ def parse_table(
     if not isinstance(year, int):
         year = int(year)
 
+    # check if the file already exists; skip if so
+    output_path = path.join('out', f_type, str(year), '{}.csv.xz'.format(
+        '-'.join(str(i) for i in [f_type, year, table] if str(i) != '')
+    ))
+    if path.exists(output_path):
+        tqdm.write(f'output file for {f_type} {year} {table} already exists')
+        return
+
     # get the relevant file spec and parse for year
     spec = get_spec(f_type, table)
     if year not in spec.index.values:
@@ -99,11 +107,7 @@ def parse_table(
 
     # save
     os.makedirs(path.join('out', f_type, str(year)), exist_ok=True)
-    df.to_csv(
-        path.join('out', f_type, str(year), '{}.csv.xz'.format(
-            '-'.join(str(i) for i in [f_type, year, table] if str(i) != '')
-        )),
-        index=False)
+    df.to_csv(output_path, index=False)
 
 
 def parse_file(file_location: Tuple[str, str], year: int,
@@ -118,18 +122,23 @@ def parse_file(file_location: Tuple[str, str], year: int,
     try:
         tables = {}
         for l in f:
+            # skip length 1 and 0 strings
+            if len(l) <= 1:
+                continue
+
+            # parse the table id and record; add to dictionary
             k, v = parse_tableid(l, return_record=True)
             try:
                 tables[k].append(v)
             except KeyError:
                 tables[k] = [v]  # init list
+
     except ValueError as e:
         raise ValueError(
             f'invalid value in {file_location} {year} {f_type}') \
             from e
 
     # for each table id, parse
-    # kevin.wong (2023-04-26) StringIO is memory inefficient
     for k, v in tables.items():
         try:
             parse_table(StringIO('\n'.join(v)), year, f_type, k)
@@ -156,6 +165,7 @@ if __name__ == '__main__':
 
     _y = zips['y_stub'].pipe(pd.to_numeric)
     zips['year'] = np.where(_y < 90, _y + 2000, _y + 1900)
+    zips.sort_values(by=['year', 'f_type'], ascending=True, inplace=True)
 
     # ------------------------------------------------------------------------
     # try to parse the files
