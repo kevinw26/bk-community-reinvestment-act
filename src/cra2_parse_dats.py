@@ -16,7 +16,7 @@ from glob import glob
 from io import StringIO
 from os import path
 from tqdm import tqdm
-from typing import Literal, TextIO, Tuple
+from typing import Literal, TextIO, Tuple, Union
 
 
 class MissingSpec(Exception):
