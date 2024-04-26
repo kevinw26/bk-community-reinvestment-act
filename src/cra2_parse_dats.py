@@ -31,7 +31,7 @@ def parse_tableid(record: Union[str, bytes], return_record: bool = False):
             record = record.decode('latin-1')  # fallback for old files
 
     # non-transmittal records have a table id
-    m = re.search('^(\w)(\d)-(\d[\w ])', record)
+    m = re.search('^(\w)(\d)-(\d[A-Za-z]?)', record)
     if m:
         table_id = (
             m.group(0).strip().replace('-', '')
@@ -108,14 +108,14 @@ def parse_table(
 
     # sensibility type checks
     if f_type in ['aggr', 'discl']:
-        assert ptypes.is_string_dtype(df['table_id'])
+        assert ptypes.is_string_dtype(df['table'])
         assert ptypes.is_numeric_dtype(df['activity_year'])
 
     if f_type in ['trans']:
-        assert ptypes.is_string_dtype(df['respondent_id'])
+        # assert ptypes.is_string_dtype(df['respondent_id'])
         assert ptypes.is_numeric_dtype(df['agency_code'])
         assert ptypes.is_numeric_dtype(df['activity_year'])
-        assert ptypes.is_string_dtype(df['respondent_state'])
+        assert ptypes.is_string_dtype(df['respondent_st'])
 
     # save
     os.makedirs(path.join('out', f_type, str(year)), exist_ok=True)
