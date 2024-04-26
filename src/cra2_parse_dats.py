@@ -6,6 +6,7 @@ Created on Fri Apr 26 14:08:50 2024
 import numpy as np
 import os
 import pandas as pd
+import pandas.api.types as ptypes
 import re
 import zipfile as zf
 
@@ -104,6 +105,17 @@ def parse_table(
     tqdm.write(f'parsing table {table} in {f_type} {year}')
     df = pd.read_fwf(f, widths=the_spec.dropna().values)
     df.columns = the_spec.index
+
+    # sensibility type checks
+    if f_type in ['aggr', 'discl']:
+        assert ptypes.is_string_dtype(df['table_id'])
+        assert ptypes.is_numeric_dtype(df['activity_year'])
+
+    if f_type in ['trans']:
+        assert ptypes.is_string_dtype(df['respondent_id'])
+        assert ptypes.is_numeric_dtype(df['agency_code'])
+        assert ptypes.is_numeric_dtype(df['activity_year'])
+        assert ptypes.is_string_dtype(df['respondent_state'])
 
     # save
     os.makedirs(path.join('out', f_type, str(year)), exist_ok=True)

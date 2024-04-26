@@ -1,4 +1,4 @@
-year,respondent_id,agency_code,activit_year,respondent_nm,respondent_addr,respondent_city,respondent_st,respondent_zip,tax_id,ID_RSSD,asset
+year,respondent_id,agency_code,activity_year,respondent_nm,respondent_addr,respondent_city,respondent_st,respondent_zip,tax_id,ID_RSSD,asset
 2021,10,1,4,30,40,25,2,10,10,10,10
 2020,10,1,4,30,40,25,2,10,10,10,10
 2019,10,1,4,30,40,25,2,10,10,10,10
