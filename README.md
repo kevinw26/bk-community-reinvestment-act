@@ -29,6 +29,12 @@ agency codes are as follows.
 Mapping from CRA respondents to standard bank identifiers such as FDIC `CERT`
 and Fed `RSSD` is via the transmittal table.
 
+The list of CRA reporters can be found on the [FFIEC website](
+    https://www.ffiec.gov/cra/reporter.htm). In 2023, the reporters were all
+banks regulated by the OCC, Federal Reserve, or FDIC that also had assets in
+excess of 1.503 billion $ as of 31 December for the previous two years. The
+reports are filed on or shortly after 1 March of every year.
+
 ## Geography
 The main identifier in aggregates is the county FIPS code. FIPS codes can
 change over time as counties expand, contract, split, merge, and rename.

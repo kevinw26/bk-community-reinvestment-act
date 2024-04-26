@@ -1,0 +1,29 @@
+# ignore directories
+out/
+log/
+debug/
+internal/
+figures/ 
+
+# optimised python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# python build
+env/
+venv/
+build/
+dist/
+var/
+
+# sqlite3 databases
+*.db
+*.sqlite3
+
+# ide nonsense
+.ipynb_checkpoints
+.python-version
+.spyderproject
+.idea
+.idea/*
