@@ -29,7 +29,7 @@ agency codes are as follows.
 Mapping from CRA respondents to standard bank identifiers such as FDIC `CERT`
 and Fed `RSSD` is via the transmittal table.
 
-The list of CRA reporters can be found on the [FFIEC website](
+CRA reporter eligibility can be found on the [FFIEC website](
     https://www.ffiec.gov/cra/reporter.htm). In 2023, the reporters were all
 banks regulated by the OCC, Federal Reserve, or FDIC that also had assets in
 excess of 1.503 billion $ as of 31 December for the previous two calendar 
