@@ -82,7 +82,7 @@ def parse_table(
         year = int(year)
 
     # check if the file already exists; skip if so
-    output_path = path.join('out', f_type, str(year), '{}.csv.xz'.format(
+    output_path = path.join('out', f_type, '{}.csv.xz'.format(
         '-'.join(str(i) for i in [f_type, year, table] if str(i) != '')
     ))
     if path.exists(output_path):
@@ -118,7 +118,7 @@ def parse_table(
         assert ptypes.is_string_dtype(df['respondent_st'])
 
     # save
-    os.makedirs(path.join('out', f_type, str(year)), exist_ok=True)
+    os.makedirs(path.join('out', f_type), exist_ok=True)
     df.to_csv(output_path, index=False)
 
 
