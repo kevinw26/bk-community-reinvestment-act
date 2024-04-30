@@ -30,6 +30,8 @@ def parse_tableid(record: Union[str, bytes], return_record: bool = False):
         except UnicodeDecodeError:
             record = record.decode('latin-1')  # fallback for old files
 
+    record = record.strip()  # strip string
+
     # non-transmittal records have a table id
     m = re.search('^(\w)(\d)-(\d[A-Za-z]?)', record)
     if m:
@@ -40,7 +42,7 @@ def parse_tableid(record: Union[str, bytes], return_record: bool = False):
         ).lower()
         return (table_id, record) if return_record else table_id
 
-    # identify if this is a transmittal record
+    # identify if this is a transmittal record on incipit
     m = re.search(r'(.{10})(\d{1})(\d{4})', record)
     if m:
         # ensure agency code is within valid values
@@ -71,11 +73,34 @@ def get_spec(f_type: str, table: str):
     raise MissingSpec(f'no spec for {f_type} {table}')
 
 
+def interpolate_spec(spec, year, record_length):
+    """
+    If the year column specifications are present, return them. Otherwise, find
+    the latest year with the same record length in column specifications and
+    use them. If no such year, raise MissingSpec.
+
+    This can cause problems if the record length stays the same BUT the columns
+    change length under them. This is not expected behaviour however.
+    """
+    if year in spec.index:
+        return spec.loc[year].dropna().astype(int)
+
+    same_reclen = spec[spec.sum(axis=1) == record_length]
+    if len(same_reclen) != 0:
+        the_spec = spec.sort_index(ascending=False).iloc[0]
+        tqdm.write(
+            f'interpolating missing spec {year} with spec at {the_spec.name}')
+        return the_spec.dropna().astype(int)
+
+    raise MissingSpec('no matching spec')
+
+
 def parse_table(
         f: TextIO,
         year: int,
         f_type: Literal['aggr', 'trans', 'discl', 'census'],
-        table: str
+        table: str,
+        reclen: int,
 ):
     # cast to year
     if not isinstance(year, int):
@@ -91,18 +116,15 @@ def parse_table(
 
     # get the relevant file spec and parse for year
     spec = get_spec(f_type, table)
-    if year not in spec.index.values:
-        raise MissingSpec(
-            f'asked to parse {f_type} {table} {year} but no spec')
-
-    # warn if duplicated
-    if spec.index.duplicated().any():
+    if spec.index.duplicated().any():  # warn if duplicated
         tqdm.write(f'duplicate file specs for {f_type} {year} {table} ?')
 
-    the_spec = spec.loc[year].dropna().astype(int)  # deal with missing values
+    # interpolate the spec if necessary
+    the_spec = interpolate_spec(spec, year, reclen)
 
     # do read
     tqdm.write(f'parsing table {table} in {f_type} {year}')
+    global df
     df = pd.read_fwf(f, widths=the_spec.dropna().values)
     df.columns = the_spec.index
 
@@ -153,7 +175,10 @@ def parse_file(file_location: Tuple[str, str], year: int,
     # for each table id, parse
     for k, v in tables.items():
         try:
-            parse_table(StringIO('\n'.join(v)), year, f_type, k)
+            parse_table(
+                StringIO('\n'.join(v)), year, f_type, k,
+                reclen=len(v[0])
+            )
         except MissingSpec:
             tqdm.write(
                 f'skipping missing spec for {f_type} {k} at year {year}')
@@ -182,7 +207,7 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------
     # try to parse the files
 
-    MULTIPROCESSING = True
+    MULTIPROCESSING = False
     if MULTIPROCESSING:
         with ProcessPoolExecutor(6) as e:
             futures = []
