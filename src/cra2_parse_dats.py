@@ -73,7 +73,7 @@ def get_spec(f_type: str, table: str):
     raise MissingSpec(f'no spec for {f_type} {table}')
 
 
-def interpolate_spec(spec, year, record_length):
+def interpolate_spec(spec: pd.DataFrame, year: int, reclen: int):
     """
     If the year column specifications are present, return them. Otherwise, find
     the latest year with the same record length in column specifications and
@@ -85,7 +85,11 @@ def interpolate_spec(spec, year, record_length):
     if year in spec.index:
         return spec.loc[year].dropna().astype(int)
 
-    same_reclen = spec[spec.sum(axis=1) == record_length]
+    same_reclen = spec[
+        reclen == spec.sum(axis=1) -
+        (spec['filler'] if 'filler' in spec.columns else 0)
+        # str.strip -> must handle filler column adjustment
+        ]
     if len(same_reclen) != 0:
         the_spec = spec.sort_index(ascending=False).iloc[0]
         tqdm.write(
@@ -177,7 +181,10 @@ def parse_file(file_location: Tuple[str, str], year: int,
         try:
             parse_table(
                 StringIO('\n'.join(v)), year, f_type, k,
-                reclen=len(v[0])
+                reclen=(
+                    len(v[0]) if isinstance(v, list) else
+                    (len(v) if isinstance(v, str) else 0)
+                )
             )
         except MissingSpec:
             tqdm.write(
