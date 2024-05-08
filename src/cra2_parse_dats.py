@@ -3,6 +3,7 @@
 Created on Fri Apr 26 14:08:50 2024
 @author: Kevin.Wong
 """
+import gc
 import numpy as np
 import os
 import pandas as pd
@@ -16,7 +17,7 @@ from glob import glob
 from io import StringIO
 from os import path
 from tqdm import tqdm
-from typing import Literal, TextIO, Tuple, Union
+from typing import List, Literal, TextIO, Tuple, Union
 
 
 class MissingSpec(Exception):
@@ -73,7 +74,7 @@ def get_spec(f_type: str, table: str):
     raise MissingSpec(f'no spec for {f_type} {table}')
 
 
-def interpolate_spec(spec: pd.DataFrame, year: int, reclen: int):
+def interpolate_spec(spec, year, reclen):
     """
     If the year column specifications are present, return them. Otherwise, find
     the latest year with the same record length in column specifications and
@@ -97,55 +98,6 @@ def interpolate_spec(spec: pd.DataFrame, year: int, reclen: int):
         return the_spec.dropna().astype(int)
 
     raise MissingSpec('no matching spec')
-
-
-def parse_table(
-        f: TextIO,
-        year: int,
-        f_type: Literal['aggr', 'trans', 'discl', 'census'],
-        table: str,
-        reclen: int,
-):
-    # cast to year
-    if not isinstance(year, int):
-        year = int(year)
-
-    # check if the file already exists; skip if so
-    output_path = path.join('out', f_type, '{}.csv.xz'.format(
-        '-'.join(str(i) for i in [f_type, year, table] if str(i) != '')
-    ))
-    if path.exists(output_path):
-        tqdm.write(f'output file for {f_type} {year} {table} already exists')
-        return
-
-    # get the relevant file spec and parse for year
-    spec = get_spec(f_type, table)
-    if spec.index.duplicated().any():  # warn if duplicated
-        tqdm.write(f'duplicate file specs for {f_type} {year} {table} ?')
-
-    # interpolate the spec if necessary
-    the_spec = interpolate_spec(spec, year, reclen)
-
-    # do read
-    tqdm.write(f'parsing table {table} in {f_type} {year}')
-    global df
-    df = pd.read_fwf(f, widths=the_spec.dropna().values)
-    df.columns = the_spec.index
-
-    # sensibility type checks
-    if f_type in ['aggr', 'discl']:
-        assert ptypes.is_string_dtype(df['table'])
-        assert ptypes.is_numeric_dtype(df['activity_year'])
-
-    if f_type in ['trans']:
-        # assert ptypes.is_string_dtype(df['respondent_id'])
-        assert ptypes.is_numeric_dtype(df['agency_code'])
-        assert ptypes.is_numeric_dtype(df['activity_year'])
-        assert ptypes.is_string_dtype(df['respondent_st'])
-
-    # save
-    os.makedirs(path.join('out', f_type), exist_ok=True)
-    df.to_csv(output_path, index=False)
 
 
 def parse_file(file_location: Tuple[str, str], year: int,
@@ -177,18 +129,67 @@ def parse_file(file_location: Tuple[str, str], year: int,
             from e
 
     # for each table id, parse
-    for k, v in tables.items():
+    for table_id, lines in tables.items():
         try:
-            parse_table(
-                StringIO('\n'.join(v)), year, f_type, k,
-                reclen=(
-                    len(v[0]) if isinstance(v, list) else
-                    (len(v) if isinstance(v, str) else 0)
-                )
+            # gen rec length
+            reclen = (
+                len(lines[0]) if isinstance(lines, list) else
+                (len(lines) if isinstance(lines, str) else 0)
             )
+
+            # cast to year
+            if not isinstance(year, int):
+                year = int(year)
+
+            # check if the file already exists; skip if so
+            output_path = path.join('out', f_type, '{}.csv.xz'.format(
+                '-'.join(str(i) for i in [f_type, year, table_id]
+                         if str(i) != '')
+            ))
+            if path.exists(output_path):
+                tqdm.write(
+                    f'output file for {f_type} {year} {table_id} already exists')
+                continue
+
+            # get the relevant file spec and parse for year
+            spec = get_spec(f_type, table_id)
+            if spec.index.duplicated().any():  # warn if duplicated
+                tqdm.write(
+                    f'duplicate file specs for {f_type} {year} {table_id} ?')
+
+            # interpolate the spec if necessary
+            the_spec = interpolate_spec(spec, year, reclen)
+
+            # do read
+            tqdm.write(f'parsing table {table_id} in {f_type} {year}')
+            df = pd.read_fwf(
+                StringIO('\n'.join(lines)), header=None,
+                widths=the_spec.dropna().values)
+            df.columns = the_spec.index
+
+            # sensibility checks
+            assert len(df) == len(lines), 'final df length != input length'
+            if f_type in ['aggr', 'discl']:
+                assert ptypes.is_string_dtype(df['table'])
+                assert ptypes.is_numeric_dtype(df['activity_year'])
+
+            if f_type in ['trans']:
+                # assert ptypes.is_string_dtype(df['respondent_id'])
+                assert ptypes.is_numeric_dtype(df['agency_code'])
+                assert ptypes.is_numeric_dtype(df['activity_year'])
+                assert ptypes.is_string_dtype(df['respondent_st'])
+
+            # save
+            os.makedirs(path.join('out', f_type), exist_ok=True)
+            df.to_csv(output_path, index=False)
+            tqdm.write(f'saved file for {f_type} {year} {table_id}')
+
         except MissingSpec:
             tqdm.write(
-                f'skipping missing spec for {f_type} {k} at year {year}')
+                f'skipping missing spec for {f_type} {table_id} at year {year}')
+
+    del tables, df, lines  # release memory explicitly
+    gc.collect()
 
 
 if __name__ == '__main__':
@@ -196,10 +197,8 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------
     # enumerate the files
 
-    zips = pd.Series(
-        sorted(glob(path.join('downloads', '*.zip'))),
-        name='path'
-    ).to_frame()
+    zips = pd.Series(sorted(glob(path.join('downloads', '*.zip'))),
+                     name='path').to_frame()
     if len(zips) < 1:
         raise ValueError('there are no zip files in the downloads folder')
 
@@ -214,9 +213,9 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------
     # try to parse the files
 
-    MULTIPROCESSING = False
+    MULTIPROCESSING = True
     if MULTIPROCESSING:
-        with ProcessPoolExecutor(6) as e:
+        with ProcessPoolExecutor(12) as e:
             futures = []
             for _, r in zips.iterrows():
                 z = zf.ZipFile(r['path'])
