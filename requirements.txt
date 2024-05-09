@@ -2,3 +2,5 @@ cloudscraper ~= 1.2.71
 pandas >= 1.*
 numpy >= 1.*
 tqdm >= 4.*
+
+polars
