@@ -138,8 +138,7 @@ def parse_file(file_location: Tuple[str, str], year: int,
             )
 
             # cast to year
-            if not isinstance(year, int):
-                year = int(year)
+            year = year if isinstance(year, int) else int(year)
 
             # check if the file already exists; skip if so
             output_path = path.join('out', f_type, '{}.csv.xz'.format(
@@ -148,7 +147,7 @@ def parse_file(file_location: Tuple[str, str], year: int,
             ))
             if path.exists(output_path):
                 tqdm.write(
-                    f'output file for {f_type} {year} {table_id} already exists')
+                    f'output file for {f_type} {year} {table_id} exists')
                 continue
 
             # get the relevant file spec and parse for year
@@ -182,13 +181,12 @@ def parse_file(file_location: Tuple[str, str], year: int,
             # save
             os.makedirs(path.join('out', f_type), exist_ok=True)
             df.to_csv(output_path, index=False)
-            tqdm.write(f'saved file for {f_type} {year} {table_id}')
 
         except MissingSpec:
             tqdm.write(
                 f'skipping missing spec for {f_type} {table_id} at year {year}')
 
-    del tables, df, lines  # release memory explicitly
+    del tables, lines  # release memory explicitly
     gc.collect()
 
 
@@ -215,7 +213,7 @@ if __name__ == '__main__':
 
     MULTIPROCESSING = True
     if MULTIPROCESSING:
-        with ProcessPoolExecutor(12) as e:
+        with ProcessPoolExecutor(8) as e:
             futures = []
             for _, r in zips.iterrows():
                 z = zf.ZipFile(r['path'])
