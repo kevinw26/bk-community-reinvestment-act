@@ -55,8 +55,13 @@ def pandas():
 if __name__ == '__main__':
     '''
     Apple M2, 16 GB RAM
-     - polars elapsed 3.8690 s (37 pc faster!)
-     - pandas elapsed 6.1175 s
+     - polars elapsed 3.489725375 s (41.21 pc faster!)
+     - pandas elapsed 5.936164082 s
     '''
-    print('polars elapsed {}'.format(timeit.timeit(polars, number=50)))
-    print('pandas elapsed {}'.format(timeit.timeit(pandas, number=50)))
+    t_pl = timeit.timeit(polars, number=50)
+    print(f'polars elapsed {t_pl}')
+
+    t_pd = timeit.timeit(pandas, number=50)
+    print(f'pandas elapsed {t_pd}')
+
+    print(f'speed up by {100 * (1 - (t_pl / t_pd)):.4f}')
